@@ -1,5 +1,8 @@
 encrypted-dict
 ==============
+.. image:: https://travis-ci.org/grahamhar/encrypted-dict.svg?branch=master
+       :target: https://travis-ci.org/grahamhar/encrypted-dict
+
 Encrypt values in dict so that the dict remains readable in plain text except for the encrypted sections,
 it's main use is for when outputing dicts to be stored on disk as yaml or json.
 
