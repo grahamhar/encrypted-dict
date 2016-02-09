@@ -13,7 +13,7 @@ class DecryptionError(Exception):
     pass
 
 
-class decrypter():
+class crypter():
 
     def __init__(self, gpg_home=None):
         if gpg_home:
