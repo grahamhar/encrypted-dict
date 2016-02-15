@@ -20,6 +20,7 @@ class crypter():
             os.environ['GNUPGHOME'] = gpg_home
         self.ctx = gpgme.Context()
         self.ctx.armor = False  # Use ASCII-armor output
+        self.recipients = None
 
     def decrypt_gpg(self, value):
         try:
@@ -52,3 +53,37 @@ class crypter():
             return pattern.sub(self.decrypt_match_group, decrypt_this)
         else:
             return decrypt_this
+
+    def encrypt_gpg(self, value, recipients):
+        try:
+            keys = [ self.ctx.get_key(recipient) for recipient in recipients ]
+            decrypted_bytes = io.BytesIO('{}'.format(value))
+            encrypted_bytes = io.BytesIO()
+            decrypted_bytes.seek(0)
+            self.ctx.encrypt(keys, 1, decrypted_bytes, encrypted_bytes )
+            return base64.b64encode(encrypted_bytes.getvalue())
+        except gpgme.GpgmeError as e:
+            raise DecryptionError(e)
+
+    def encrypt_match_group(self, value):
+        regex_result = value.group(2)
+        encryption_type = value.group(1)
+        if encryption_type == 'GPG':
+            return 'ENC[GPG,{}]'.format(self.encrypt_gpg(regex_result, self.recipients))
+        else:
+            raise UnsupportedEncryptionMethod('No way of handling {} encryption type'.format(encryption_type))
+
+    def encrypt_all(self, encrypt_this, recipients=None):
+        if recipients:
+            self.recipients = recipients
+        if type(encrypt_this) == dict:
+            for key, value in encrypt_this.iteritems():
+                encrypt_this[key] = self.encrypt_all(value)
+            return encrypt_this
+        elif type(encrypt_this) == list:
+            return [self.encrypt_all(item_value, recipients) for item_value in encrypt_this]
+        elif type(encrypt_this) == str:
+            pattern = re.compile(r'DEC::\((.*)\)\[(.*)\]')
+            return pattern.sub(self.encrypt_match_group, encrypt_this)
+        else:
+            return encrypt_this
