@@ -6,6 +6,12 @@ encrypted-dict
 Encrypt values in dict so that the dict remains readable in plain text except for the encrypted sections,
 it's main use is for when outputing dicts to be stored on disk as yaml or json.
 
+Setup
+-----
+
+pygpgme requires libgpgme11-dev on Ubuntu and on Mac OSX (via brew) you need gpgme and libgpg-error
+
+
 Inspired by:
 
 hiera-eyaml_ and hiera-eyaml-gpg_
