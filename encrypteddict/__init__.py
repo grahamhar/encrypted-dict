@@ -24,12 +24,14 @@ class crypter():
 
     def decrypt_gpg(self, value):
         try:
-            encrypted_bytes = io.BytesIO('{}'.format(base64.b64decode(value)))
+            encrypted_string = base64.b64decode(value)
+            encrypted_bytes = io.BytesIO(encrypted_string)
             encrypted_bytes.seek(0)
             decrypted_bytes = io.BytesIO()
             self.ctx.decrypt(encrypted_bytes, decrypted_bytes)
-            return decrypted_bytes.getvalue()
+            return decrypted_bytes.getvalue().decode("utf-8")
         except gpgme.GpgmeError as e:
+            print(e)
             raise DecryptionError(e)
 
     def decrypt_match_group(self, value):
@@ -43,7 +45,7 @@ class crypter():
 
     def decrypt_all(self, decrypt_this):
         if type(decrypt_this) == dict:
-            for key, value in decrypt_this.iteritems():
+            for key, value in decrypt_this.items():
                 decrypt_this[key] = self.decrypt_all(value)
             return decrypt_this
         elif type(decrypt_this) == list:
@@ -57,7 +59,7 @@ class crypter():
     def encrypt_gpg(self, value, recipients):
         try:
             keys = [ self.ctx.get_key(recipient) for recipient in recipients ]
-            decrypted_bytes = io.BytesIO('{}'.format(value))
+            decrypted_bytes = io.BytesIO(bytes('{}'.format(value).encode()))
             encrypted_bytes = io.BytesIO()
             decrypted_bytes.seek(0)
             self.ctx.encrypt(keys, 1, decrypted_bytes, encrypted_bytes )
@@ -77,7 +79,7 @@ class crypter():
         if recipients:
             self.recipients = recipients
         if type(encrypt_this) == dict:
-            for key, value in encrypt_this.iteritems():
+            for key, value in encrypt_this.items():
                 encrypt_this[key] = self.encrypt_all(value)
             return encrypt_this
         elif type(encrypt_this) == list:
